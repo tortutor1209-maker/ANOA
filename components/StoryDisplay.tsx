@@ -45,7 +45,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ data }) => {
   const [playingScene, setPlayingScene] = useState<number | null>(null);
   const [sceneAudioUrls, setSceneAudioUrls] = useState<Record<number, string>>({});
   const [isGeneratingAsset, setIsGeneratingAsset] = useState<string | null>(null);
-  const [visualizedAssets, setVisualizedAssets] = useState<Record<string, string>>({});
+  const [visualizedAssets, setVisualizedAssets] = useState<Record<string, { url: string, ratio: string }>>({});
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -57,7 +57,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ data }) => {
     setIsGeneratingAsset(id);
     try {
       const url = await generateImage(prompt, ratio);
-      setVisualizedAssets(prev => ({ ...prev, [id]: url }));
+      setVisualizedAssets(prev => ({ ...prev, [id]: { url, ratio } }));
     } catch (err) {
       alert("Gagal memvisualisasikan aset.");
     } finally {
@@ -131,7 +131,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ data }) => {
         {data.scenes.map((scene, idx) => {
           const isVerification = scene.tone === "SOURCE_VERIFICATION";
           const assetId = `scene-${idx}`;
-          const visualizedUrl = visualizedAssets[assetId];
+          const visualized = visualizedAssets[assetId];
           const isGenerating = isGeneratingAsset === assetId;
 
           return (
@@ -181,44 +181,61 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ data }) => {
                          ))}
                        </div>
                     </div>
-                    <div className="relative aspect-video bg-neutral-100 rounded-3xl border-2 border-dashed border-black/10 flex flex-col items-center justify-center group overflow-hidden shadow-inner">
-                       {visualizedUrl ? (
+                    <div className={`relative ${visualized?.ratio === '9:16' ? 'aspect-[9/16] max-h-[500px]' : 'aspect-video'} bg-neutral-100 rounded-3xl border-2 border-dashed border-black/10 flex flex-col items-center justify-center group overflow-hidden shadow-inner mx-auto w-full`}>
+                       {visualized ? (
                          <>
-                           <img src={visualizedUrl} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                           <img src={visualized.url} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 z-30">
+                              <div className="flex flex-col gap-2">
+                                <button 
+                                  onClick={() => handleVisualize(scene.structuredPrompt1.subject, assetId, "16:9")}
+                                  disabled={isGenerating}
+                                  className="px-4 py-2 bg-white text-black rounded-xl text-[9px] font-black uppercase shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center gap-2"
+                                >
+                                  <i className="fa-solid fa-arrows-rotate"></i> Refresh 16:9
+                                </button>
+                                <button 
+                                  onClick={() => handleVisualize(scene.structuredPrompt1.subject, assetId, "9:16")}
+                                  disabled={isGenerating}
+                                  className="px-4 py-2 bg-white text-black rounded-xl text-[9px] font-black uppercase shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center gap-2"
+                                >
+                                  <i className="fa-solid fa-arrows-rotate"></i> Refresh 9:16
+                                </button>
+                              </div>
                               <button 
-                                onClick={() => handleVisualize(scene.structuredPrompt1.subject, assetId, "16:9")}
-                                disabled={isGenerating}
-                                className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black shadow-xl hover:scale-110 active:scale-95 transition-all"
-                                title="Regenerate Image"
-                              >
-                                <i className={`fa-solid fa-arrows-rotate ${isGenerating ? 'animate-spin' : ''}`}></i>
-                              </button>
-                              <button 
-                                onClick={() => downloadAsset(visualizedUrl, `AnoaLabs_Scene_${scene.number}`)}
-                                className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black shadow-xl hover:scale-110 active:scale-95 transition-all"
+                                onClick={() => downloadAsset(visualized.url, `AnoaLabs_Scene_${scene.number}`)}
+                                className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all"
                                 title="Download Image"
                               >
-                                <i className="fa-solid fa-download"></i>
+                                <i className="fa-solid fa-download text-xl"></i>
                               </button>
                            </div>
                          </>
                        ) : (
-                         <>
-                           <i className="fa-solid fa-wand-magic-sparkles text-3xl text-black/10 group-hover:text-black/30 transition-all mb-2"></i>
-                           <button 
-                             onClick={() => handleVisualize(scene.structuredPrompt1.subject, assetId, "16:9")}
-                             disabled={isGenerating}
-                             className="px-4 py-2 bg-black text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-xl group-hover:scale-105 transition-all"
-                           >
-                             VISUALIZE SCENE
-                           </button>
-                         </>
+                         <div className="text-center space-y-4">
+                           <i className="fa-solid fa-wand-magic-sparkles text-4xl text-black/10 group-hover:text-black/30 transition-all"></i>
+                           <div className="flex gap-3">
+                             <button 
+                               onClick={() => handleVisualize(scene.structuredPrompt1.subject, assetId, "16:9")}
+                               disabled={isGenerating}
+                               className="px-6 py-3 bg-black text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all"
+                             >
+                               VISUALIZE 16:9
+                             </button>
+                             <button 
+                               onClick={() => handleVisualize(scene.structuredPrompt1.subject, assetId, "9:16")}
+                               disabled={isGenerating}
+                               className="px-6 py-3 bg-white border border-black text-black rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all"
+                             >
+                               VISUALIZE 9:16
+                             </button>
+                           </div>
+                         </div>
                        )}
                        {isGenerating && (
-                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white z-20">
-                           <i className="fa-solid fa-spinner animate-spin text-2xl mb-2"></i>
-                           <span className="text-[10px] font-black uppercase tracking-widest">Generating Visual...</span>
+                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white z-40">
+                           <i className="fa-solid fa-spinner animate-spin text-3xl mb-3"></i>
+                           <span className="text-[11px] font-black uppercase tracking-[0.2em]">ANOALABS Generating...</span>
                          </div>
                        )}
                     </div>
@@ -255,10 +272,10 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ data }) => {
                <div className="aspect-[9/16] w-full max-w-[200px] bg-neutral-100 rounded-3xl border-2 border-dashed border-black/10 flex items-center justify-center overflow-hidden">
                  {visualizedAssets['tk-cov'] ? (
                    <>
-                    <img src={visualizedAssets['tk-cov']} className="w-full h-full object-cover" />
+                    <img src={visualizedAssets['tk-cov'].url} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <button 
-                          onClick={() => downloadAsset(visualizedAssets['tk-cov'], 'AnoaLabs_TikTok_Cover')}
+                          onClick={() => downloadAsset(visualizedAssets['tk-cov'].url, 'AnoaLabs_TikTok_Cover')}
                           className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black shadow-xl"
                         >
                           <i className="fa-solid fa-download"></i>
@@ -291,10 +308,10 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ data }) => {
                <div className="aspect-video w-full bg-neutral-100 rounded-3xl border-2 border-dashed border-black/10 flex items-center justify-center overflow-hidden">
                  {visualizedAssets['yt-cov'] ? (
                    <>
-                    <img src={visualizedAssets['yt-cov']} className="w-full h-full object-cover" />
+                    <img src={visualizedAssets['yt-cov'].url} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <button 
-                          onClick={() => downloadAsset(visualizedAssets['yt-cov'], 'AnoaLabs_YouTube_Thumb')}
+                          onClick={() => downloadAsset(visualizedAssets['yt-cov'].url, 'AnoaLabs_YouTube_Thumb')}
                           className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black shadow-xl"
                         >
                           <i className="fa-solid fa-download"></i>
