@@ -118,6 +118,12 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ data }) => {
     }
   };
 
+  const formatFullPrompt = (structuredPrompt: StructuredPrompt) => {
+    return Object.entries(structuredPrompt)
+      .map(([key, value]) => `${key.replace('_', ' ').toUpperCase()}: ${value}`)
+      .join('\n');
+  };
+
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
       <div className="glass-effect p-10 rounded-[2.5rem] colorful-border shadow-2xl bg-white/90">
@@ -192,7 +198,12 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ data }) => {
                     <div className="bg-white/40 p-6 rounded-3xl border border-black/5 space-y-4">
                        <div className="flex items-center justify-between">
                          <span className="text-[10px] font-black uppercase tracking-widest text-black/40">Visual Prompt v4</span>
-                         <button onClick={() => copyToClipboard(scene.structuredPrompt1.subject, `p-${idx}`)} className="text-[9px] font-black hover:text-blue-600 transition-colors">COPY PROMPT</button>
+                         <button 
+                            onClick={() => copyToClipboard(formatFullPrompt(scene.structuredPrompt1), `p-${idx}`)} 
+                            className={`text-[9px] font-black transition-colors ${copied === `p-${idx}` ? 'text-green-600' : 'hover:text-blue-600'}`}
+                         >
+                            {copied === `p-${idx}` ? 'COPIED!' : 'COPY PROMPT'}
+                         </button>
                        </div>
                        <div className="grid grid-cols-2 gap-3">
                          {Object.entries(scene.structuredPrompt1).map(([k, v]) => (
