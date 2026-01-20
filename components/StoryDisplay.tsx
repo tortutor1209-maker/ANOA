@@ -74,6 +74,15 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ data }) => {
     document.body.removeChild(link);
   };
 
+  const downloadAudio = (url: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename}.wav`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handlePlayVoice = async (text: string, sceneNum: number) => {
     if (playingScene !== null) return;
     if (sceneAudioUrls[sceneNum]) {
@@ -133,6 +142,7 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ data }) => {
           const assetId = `scene-${idx}`;
           const visualized = visualizedAssets[assetId];
           const isGenerating = isGeneratingAsset === assetId;
+          const hasAudio = !!sceneAudioUrls[scene.number];
 
           return (
             <div key={idx} className={`glass-effect overflow-hidden rounded-[2.5rem] colorful-border group transition-all shadow-xl bg-white/60 ${isVerification ? 'ring-2 ring-blue-500/20' : ''}`}>
@@ -148,13 +158,25 @@ export const StoryDisplay: React.FC<StoryDisplayProps> = ({ data }) => {
                       <span className="text-[10px] text-black/40 font-black uppercase tracking-widest">{scene.tone}</span>
                    </div>
                 </div>
-                <button 
-                  onClick={() => handlePlayVoice(scene.narration, scene.number)}
-                  disabled={playingScene !== null}
-                  className={`px-6 py-3 rounded-2xl font-black text-[10px] tracking-widest transition-all shadow-md active:scale-95 ${playingScene === scene.number ? 'bg-neutral-200 animate-pulse text-black' : 'bg-black text-white hover:bg-neutral-800'}`}
-                >
-                  {playingScene === scene.number ? 'PLAYING...' : 'PLAY VOICEOVER'}
-                </button>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => handlePlayVoice(scene.narration, scene.number)}
+                    disabled={playingScene !== null}
+                    className={`px-6 py-3 rounded-2xl font-black text-[10px] tracking-widest transition-all shadow-md active:scale-95 ${playingScene === scene.number ? 'bg-neutral-200 animate-pulse text-black' : 'bg-black text-white hover:bg-neutral-800'}`}
+                  >
+                    {playingScene === scene.number ? 'PLAYING...' : 'PLAY VOICEOVER'}
+                  </button>
+                  
+                  {hasAudio && (
+                    <button 
+                      onClick={() => downloadAudio(sceneAudioUrls[scene.number], `AnoaLabs_Scene_${scene.number}_Audio`)}
+                      className="w-12 h-12 bg-white border border-black/10 rounded-2xl flex items-center justify-center text-black shadow-md hover:scale-105 active:scale-95 transition-all"
+                      title="Download Voiceover"
+                    >
+                      <i className="fa-solid fa-file-audio text-lg"></i>
+                    </button>
+                  )}
+                </div>
               </div>
               
               <div className="p-10 space-y-8">
