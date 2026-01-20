@@ -1,0 +1,9 @@
+{
+  "name": "ANOALABS - Cinematic Storytelling",
+  "description": "ULTIMATE v4: AI Fact-Based Content Analyzer & Educational Cinematic Storytelling Generator with Google Search Grounding.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
